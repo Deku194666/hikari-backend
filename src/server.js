@@ -9,6 +9,9 @@ import appointmentRoutes from "./routes/appointmentRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
+import clinicalRecordRoutes from "./routes/clinicalRecordRoutes.js";
+import examRoutes from "./routes/examRoutes.js";
+import path from "path";
 
 
 
@@ -24,6 +27,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/pets", petRoutes);
@@ -31,6 +35,8 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", alertRoutes);
+app.use("/api/clinical-records", clinicalRecordRoutes);
+app.use("/api/exams", examRoutes);
 
 
 app.get("/", (req, res) => {

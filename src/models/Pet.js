@@ -22,6 +22,11 @@ const petSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    sex: {
+      type: String,
+      enum: ["Macho", "Hembra"],
+      required: true
+    },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

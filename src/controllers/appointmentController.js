@@ -1,28 +1,41 @@
 import Appointment from "../models/Appointment.js";
 import Pet from "../models/Pet.js";
+import User from "../models/User.js";
 
 // cliente o vet crea una cita para una mascota ya registrada
 export const createAppointment = async (req, res) => {
   try {
-    const { petId, date, time, reason, notes } = req.body;
+    const { petId, vetId, date, time, reason, notes } = req.body;
 
     const pet = await Pet.findById(petId);
     if (!pet) return res.status(404).json({ msg: "Mascota no encontrada" });
 
-    // evitar doble reserva del mismo horario
+    const chosenVetId = req.user.role === "vet" ? req.user._id : vetId;
+
+    if (!chosenVetId) {
+      return res.status(400).json({ msg: "Debes seleccionar un veterinario" });
+    }
+
+    const vet = await User.findOne({ _id: chosenVetId, role: "vet" });
+    if (!vet) {
+      return res.status(404).json({ msg: "Veterinario no encontrado" });
+    }
+
+    // evitar doble reserva del mismo horario CON EL MISMO VET
     const existing = await Appointment.findOne({
+      vet: chosenVetId,
       date,
       time,
       status: { $ne: "cancelada" }
     });
     if (existing) {
-      return res.status(400).json({ msg: "Ese horario ya fue reservado, elige otro" });
+      return res.status(400).json({ msg: "Ese horario ya fue reservado con este veterinario, elige otro" });
     }
 
     const appointment = await Appointment.create({
       pet: petId,
       owner: pet.owner,
-      vet: req.user.role === "vet" ? req.user._id : undefined,
+      vet: chosenVetId,
       date,
       time,
       reason,
@@ -32,9 +45,20 @@ export const createAppointment = async (req, res) => {
 
     const populated = await Appointment.findById(appointment._id)
       .populate("pet")
-      .populate("owner", "name email phone");
+      .populate("owner", "name email phone")
+      .populate("vet", "name");
 
     res.json(populated);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+// listar veterinarios disponibles (para el selector del formulario)
+export const getVets = async (req, res) => {
+  try {
+    const vets = await User.find({ role: "vet" }).select("name email");
+    res.json(vets);
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
@@ -59,6 +83,7 @@ export const getAllAppointments = async (req, res) => {
     const appointments = await Appointment.find({})
       .populate("pet")
       .populate("owner", "name email phone")
+      .populate("vet", "name")
       .sort({ date: 1, time: 1 });
     res.json(appointments);
   } catch (error) {
@@ -120,14 +145,16 @@ export const deleteAppointment = async (req, res) => {
   }
 };
 
-// cualquier usuario logueado ve qué horas están tomadas en una fecha (sin datos personales)
+// cualquier usuario logueado ve qué horas están tomadas en una fecha PARA UN VET, sin datos personales
 export const getAvailability = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, vetId } = req.query;
     if (!date) return res.status(400).json({ msg: "Falta la fecha" });
+    if (!vetId) return res.status(400).json({ msg: "Falta el veterinario" });
 
     const appointments = await Appointment.find({
       date,
+      vet: vetId,
       status: { $ne: "cancelada" }
     }).select("time");
 

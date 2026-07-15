@@ -3,7 +3,7 @@ import Pet from "../models/Pet.js";
 // crear mascota
 export const createPet = async (req, res) => {
   try {
-    const { name, type, breed, age, weight } = req.body;
+    const { name, type, breed, age, weight, sex } = req.body;
 
     const pet = await Pet.create({
       name,
@@ -11,6 +11,7 @@ export const createPet = async (req, res) => {
       breed,
       age,
       weight,
+      sex,
       owner: req.user._id
     });
 
@@ -62,13 +63,14 @@ export const updatePet = async (req, res) => {
       return res.status(401).json({ msg: "No autorizado" });
     }
 
-    const { name, type, breed, age, weight } = req.body;
+    const { name, type, breed, age, weight, sex } = req.body;
 
     pet.name = name || pet.name;
     pet.type = type || pet.type;
     pet.breed = breed || pet.breed;
     pet.age = age || pet.age;
     pet.weight = weight || pet.weight;
+    pet.sex = sex || pet.sex;
 
     const updatedPet = await pet.save();
 

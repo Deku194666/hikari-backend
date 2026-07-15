@@ -2,6 +2,7 @@ import express from "express";
 import { authRequired, vetRequired } from "../middleware/authMiddleware.js";
 import {
   createAppointment,
+  getVets,
   getMyAppointments,
   getAllAppointments,
   updateAppointmentStatus,
@@ -14,6 +15,7 @@ import {
 const router = express.Router();
 
 router.post("/", authRequired, createAppointment);
+router.get("/vets", authRequired, getVets);
 router.get("/mine", authRequired, getMyAppointments);
 router.get("/availability", authRequired, getAvailability);
 router.get("/summary", authRequired, getMonthSummary);

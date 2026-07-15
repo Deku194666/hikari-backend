@@ -1,6 +1,10 @@
+
+
+
+
 import mongoose from "mongoose";
 
-const appointmentSchema = new mongoose.Schema(
+const examRequestSchema = new mongoose.Schema(
   {
     pet: {
       type: mongoose.Schema.Types.ObjectId,
@@ -12,34 +16,38 @@ const appointmentSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-    vet: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    examTypes: {
+      type: [String],
       required: true
     },
-    date: {
+    otherDescription: {
+      type: String
+    },
+    paymentMethod: {
       type: String,
+      enum: ["Transferencia", "Efectivo", "Tarjeta"],
       required: true
     },
-    time: {
-      type: String,
-      required: true
-    },
-    reason: {
+    address: {
       type: String,
       required: true
     },
     notes: {
-      type: String,
-      default: ""
+      type: String
     },
     status: {
       type: String,
-      enum: ["pendiente", "atendida", "cancelada"],
+      enum: ["pendiente", "agendado", "realizado", "resultados_listos"],
       default: "pendiente"
+    },
+    scheduledDate: {
+      type: Date
+    },
+    resultsNotes: {
+      type: String
     }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Appointment", appointmentSchema);
+export default mongoose.model("ExamRequest", examRequestSchema);
